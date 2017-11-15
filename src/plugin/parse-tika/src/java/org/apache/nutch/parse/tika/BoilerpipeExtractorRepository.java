@@ -16,49 +16,49 @@
  */
 package org.apache.nutch.parse.tika;
 
-import java.lang.invoke.MethodHandles;
-import java.lang.ClassLoader;
-import java.lang.InstantiationException;
-import java.util.WeakHashMap;
+import de.l3s.boilerpipe.BoilerpipeExtractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.tika.parser.html.BoilerpipeContentHandler;
-import de.l3s.boilerpipe.BoilerpipeExtractor;
-import de.l3s.boilerpipe.extractors.*;
+
+import java.lang.invoke.MethodHandles;
+import java.util.WeakHashMap;
 
 class BoilerpipeExtractorRepository {
 
   private static final Logger LOG = LoggerFactory
       .getLogger(MethodHandles.lookup().lookupClass());
+
   public static final WeakHashMap<String, BoilerpipeExtractor> extractorRepository = new WeakHashMap<String, BoilerpipeExtractor>();
- 
-    /**
-     * Returns an instance of the specified extractor
-     */
-    public static BoilerpipeExtractor getExtractor(String boilerpipeExtractorName) {
-      // Check if there's no instance of this extractor
-      if (!extractorRepository.containsKey(boilerpipeExtractorName)) {
-        // FQCN
-        boilerpipeExtractorName = "de.l3s.boilerpipe.extractors." + boilerpipeExtractorName;
 
-        // Attempt to load the class
-        try {
-          ClassLoader loader = BoilerpipeExtractor.class.getClassLoader();
-          Class extractorClass = loader.loadClass(boilerpipeExtractorName);
+  /**
+   * Returns an instance of the specified extractor
+   */
+  public static BoilerpipeExtractor getExtractor(
+      String boilerpipeExtractorName) {
+    // Check if there's no instance of this extractor
+    if (!extractorRepository.containsKey(boilerpipeExtractorName)) {
+      // FQCN
+      boilerpipeExtractorName =
+          "de.l3s.boilerpipe.extractors." + boilerpipeExtractorName;
 
-          // Add an instance to the repository
-          extractorRepository.put(boilerpipeExtractorName, (BoilerpipeExtractor)extractorClass.newInstance());
+      // Attempt to load the class
+      try {
+        ClassLoader loader = BoilerpipeExtractor.class.getClassLoader();
+        Class extractorClass = loader.loadClass(boilerpipeExtractorName);
 
-        } catch (ClassNotFoundException e) {
-          LOG.error("BoilerpipeExtractor {} not found!", boilerpipeExtractorName);
-        } catch (InstantiationException e) {
-          LOG.error("Could not instantiate {}!", boilerpipeExtractorName);
-        } catch (Exception e) {
-          LOG.error("Error due to the {}!",boilerpipeExtractorName, e);
-        }
+        // Add an instance to the repository
+        extractorRepository.put(boilerpipeExtractorName,
+            (BoilerpipeExtractor) extractorClass.newInstance());
+
+      } catch (ClassNotFoundException e) {
+        LOG.error("BoilerpipeExtractor {} not found!", boilerpipeExtractorName);
+      } catch (InstantiationException e) {
+        LOG.error("Could not instantiate {}!", boilerpipeExtractorName);
+      } catch (Exception e) {
+        LOG.error("Error due to the {}!", boilerpipeExtractorName, e);
       }
-
-      return extractorRepository.get(boilerpipeExtractorName);
     }
 
+    return extractorRepository.get(boilerpipeExtractorName);
+  }
 }

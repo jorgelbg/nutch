@@ -80,12 +80,11 @@ public class TikaParser implements org.apache.nutch.parse.Parser {
   private String cachingPolicy;
 
   private HtmlMapper HTMLMapper;
+  private boolean useBoilerpipe;
+  private String boilerpipeExtractorName;
 
   @Override
   public Parse getParse(String url, WebPage page) {
-
-    boolean useBoilerpipe = getConf().getBoolean("tika.boilerpipe", false); 
-    String boilerpipeExtractorName = getConf().get("tika.boilerpipe.extractor", "ArticleExtractor");
 
     String baseUrl = TableUtil.toString(page.getBaseUrl());
     URL base;
@@ -118,14 +117,16 @@ public class TikaParser implements org.apache.nutch.parse.Parser {
     ContentHandler domHandler;
     // Check whether to use Tika's BoilerplateContentHandler
     if (useBoilerpipe) {
-        LOG.debug("Using Tikas's Boilerpipe with Extractor: {}.", boilerpipeExtractorName);
-        BoilerpipeContentHandler bpHandler = new BoilerpipeContentHandler((ContentHandler)new DOMBuilder(doc, root), BoilerpipeExtractorRepository.getExtractor(boilerpipeExtractorName));
+        LOG.debug("Using Tikas's Boilerpipe with Extractor: {}.",
+            boilerpipeExtractorName);
+        BoilerpipeContentHandler bpHandler = new BoilerpipeContentHandler((ContentHandler)new DOMBuilder(doc, root), BoilerpipeExtractorRepository.getExtractor(
+            boilerpipeExtractorName));
         bpHandler.setIncludeMarkup(true);
         domHandler = (ContentHandler)bpHandler;
     } else {
         domHandler = new DOMBuilder(doc, root);
     }
-    
+
     ParseContext context = new ParseContext();
     if (HTMLMapper != null)
       context.set(HtmlMapper.class, HTMLMapper);
@@ -181,7 +182,7 @@ public class TikaParser implements org.apache.nutch.parse.Parser {
 	    return ParseStatusUtils.getEmptyParse(e, getConf());
         }
     }
-    
+
 
     if (!metaTags.getNoFollow()) { // okay to follow links
       ArrayList<Outlink> l = new ArrayList<Outlink>(); // extract outlinks
@@ -267,6 +268,9 @@ public class TikaParser implements org.apache.nutch.parse.Parser {
     this.utils = new DOMContentUtils(conf);
     this.cachingPolicy = getConf().get("parser.caching.forbidden.policy",
         Nutch.CACHING_FORBIDDEN_CONTENT);
+
+    this.useBoilerpipe = conf.getBoolean("tika.boilerpipe", false);
+    this.boilerpipeExtractorName = conf.get("tika.boilerpipe.extractor", "ArticleExtractor");
   }
 
   public TikaConfig getTikaConfig() {
